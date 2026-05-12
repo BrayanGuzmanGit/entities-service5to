@@ -51,8 +51,18 @@ class UserController {
   }
   async editProfile(req, res, next) {
     try {
-      const { nombre, apellido, direccion, telefono, email, password } = req.body;
-      const updatedUser = await userService.editProfile(req.user.id, nombre, direccion, apellido, telefono, email, password);
+      const token = req.headers.authorization?.split(' ')[1];
+      const { nombre, direccion, apellido, telefono, email, password } = req.body;
+      const updatedUser = await userService.editProfile(
+        req.user.id,
+        nombre,
+        direccion,
+        apellido,
+        telefono,
+        email,
+        password,
+        token
+      );
       return ApiResponse.success(res, updatedUser, 'Perfil actualizado con éxito');
     } catch (error) {
       next(error);

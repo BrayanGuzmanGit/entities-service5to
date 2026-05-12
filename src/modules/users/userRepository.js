@@ -92,6 +92,31 @@ class UserRepository {
     return data;
   }
 
+  async updateEmail(email, token) {
+    const { data, error } = await supabase.auth.updateUser(
+    {email},
+    { token }
+  );
+  if (error) {
+    console.error('❌ Error en Auth.updateUser:', error);
+    throw new AppError(error.message, 400);
+  }
+  return data;
+  }
+
+  async updateClave(password, token) {
+  const { data, error } = await supabase.auth.updateUser(
+    { password },
+    { token }
+  );
+  if (error) {
+    console.error('❌ Error en Auth.updateUser:', error);
+    throw new AppError(error.message, 400);
+  }
+
+  return data;
+}
+
   async updateProfile(id, nombre, direccion_residencia, apellido, telefono, correo_electronico, clave) {
     const { data, error } = await supabase
       .from('usuarios')

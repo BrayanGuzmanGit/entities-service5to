@@ -90,8 +90,36 @@ class UserService {
     return await userRepository.updateEstado(cc, status);
   }
 
-  async editProfile(id, nombre, direccion, apellido, telefono, email, password) {
-    const updatedUser = await userRepository.updateProfile(id, nombre, direccion, apellido, telefono, email, password);
+  
+
+  async editProfile(id, nombre, direccion, apellido, telefono, email, password, token) {
+    // Obtener usuario actual para comparar cambios reales
+    const usuarioActual = await userRepository.findUserById(id);
+    // Solo actualizar Auth si email o password REALMENTE cambiaron
+    const emailCambio = email && email.trim() && email !== usuarioActual.correo_electronico;
+    const passwordCambio = password && password.trim() && password !== usuarioActual.clave;
+    
+    if (passwordCambio) {
+      await userRepository.updateClave(password, token);
+    }else{
+      password = usuarioActual.clave; // Mantener la clave actual si no se cambia
+    }
+    if (emailCambio) {
+      await userRepository.updateEmail(email, token);
+    }else{
+      email = usuarioActual.correo_electronico; // Mantener el email actual si no se cambia
+    }
+
+    const updatedUser = await userRepository.updateProfile(
+      id,
+      nombre,
+      direccion,
+      apellido,
+      telefono,
+      email,
+      password
+    );
+
     if (!updatedUser) {
       throw new AppError('No se pudo actualizar el perfil', 500);
     }
