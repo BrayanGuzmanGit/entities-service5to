@@ -33,7 +33,7 @@ class LocationService {
     if (predio.id_usuario_propietario !== ownerId) {
       throw new AppError('Solo el propietario del predio puede vincular un lugar de produccion', 403);
     }
-    
+
     // 3. Obtener el id del lugar de produccion por numero de registro
     const lugar = await locationRepository.getLugarByNumeroRegistro(numeroRegistro);
 
@@ -46,7 +46,7 @@ class LocationService {
   }
 
 
-  async getPrediosByLugar(id_lugar){
+  async getPrediosByLugar(id_lugar) {
     return await locationRepository.getPrediosByLugar(id_lugar);
   }
 
@@ -74,17 +74,17 @@ class LocationService {
     const lotes = await locationRepository.getLotesPorLugar(predio.id_lugar_produccion);
     let areaCultivada = 0;
     lotes.forEach(lote => {
-      areaCultivada=areaCultivada+Number(lote.area || 0);
+      areaCultivada = areaCultivada + Number(lote.area || 0);
     });
 
     const predios = await locationRepository.getPrediosByLugar(predio.id_lugar_produccion);
     let areaTotalLugar = 0;
     predios.forEach(predio => {
-      areaTotalLugar=areaTotalLugar+Number(predio.area || 0);
+      areaTotalLugar = areaTotalLugar + Number(predio.area || 0);
     });
 
     //Verificar que el area cultivada no sea mayor al area que queda disponible al eliminar el predio del lugar
-      if (areaCultivada > (areaTotalLugar - predio.area)) {
+    if (areaCultivada > (areaTotalLugar - predio.area)) {
       throw new AppError('El predio no se puede desvincular del lugar de produccion porque el area cultivada es mayor al area disponible del lugar de produccion', 400);
     }
 
@@ -92,7 +92,7 @@ class LocationService {
     return await locationRepository.unlinkLugarFromPredio(id_predio);
   }
 
-  
+
 
   async editPredio(nombre, area, id_propietario, numeroRegistro) {
     return await locationRepository.editPredio(nombre, area, id_propietario, numeroRegistro);
@@ -101,7 +101,7 @@ class LocationService {
   async deletePredio(numeroRegistro, ownerId) {
     //1. Traer info del predio desde la base de datos
     const predio = await locationRepository.getPredioByNumeroRegistro(numeroRegistro);
-    
+
     //2. Lógica de Negocio: Verificar propiedad (Responsabilidad del Service)
     if (predio.id_usuario_propietario !== ownerId) {
       throw new AppError('Solo el propietario del predio puede eliminarlo', 403);
@@ -135,16 +135,16 @@ class LocationService {
     return await locationRepository.editNameLugar(numeroRegistro, nuevoNombre, id_productor);
   }
 
-  async verificarPredioCentral(id_lugar, id_user){
+  async verificarPredioCentral(id_lugar, id_user) {
     const lugar = await locationRepository.getLugarById(id_lugar);
     if (lugar.uidproductor !== id_user) {
       throw new AppError('No eres el dueño de este lugar de produccion', 403);
     }
-    const lugarYaTieneCentral = await locationRepository.verificarSiTienePredioCentral(lugar.id); 
+    const lugarYaTieneCentral = await locationRepository.verificarSiTienePredioCentral(lugar.id);
     if (lugarYaTieneCentral[0] == 1) {// esto da true si el lugar ya tiene un predio central asignado, y false si no tiene.
-        return true
-    }else{
-        return false
+      return true
+    } else {
+      return false
     }
   }
 
@@ -170,12 +170,12 @@ class LocationService {
       throw new AppError('El predio ya es central', 400);
     }
 
-    const lugarYaTieneCentral = await locationRepository.verificarSiTienePredioCentral(lugar.id); 
+    const lugarYaTieneCentral = await locationRepository.verificarSiTienePredioCentral(lugar.id);
     if (lugarYaTieneCentral[0] == 1) {// esto da true si el lugar ya tiene un predio central asignado, y false si no tiene.
-        await locationRepository.configurarPredioCentral(lugarYaTieneCentral[1], false); // Primero desmarcamos el predio central actual
-        return await locationRepository.configurarPredioCentral(predio.id, true); //Se marca el nuevo predio como central
-    }else{
-        return await locationRepository.configurarPredioCentral(predio.id, true); // Si no hay predio central, simplemente marcamos el nuevo como central
+      await locationRepository.configurarPredioCentral(lugarYaTieneCentral[1], false); // Primero desmarcamos el predio central actual
+      return await locationRepository.configurarPredioCentral(predio.id, true); //Se marca el nuevo predio como central
+    } else {
+      return await locationRepository.configurarPredioCentral(predio.id, true); // Si no hay predio central, simplemente marcamos el nuevo como central
     }
   }
 
@@ -192,7 +192,7 @@ class LocationService {
     if (predios.length > 0) {
       throw new AppError('El lugar de produccion tiene predios asociados, debe desvincularlos para eliminarlo', 400);
     }
-    
+
     //AQUI IRA LA FUNCION DE getLotesPorLugar para verificar que el lugar no tenga Lotes asociados
 
     //4. Eliminar el lugar de produccion
@@ -202,7 +202,7 @@ class LocationService {
   async getMyLugares(id_productor) {
     return await locationRepository.getLugaresByProductor(id_productor);
   }
-   async getLugarProduccionbyId(id_lugar) {
+  async getLugarProduccionbyId(id_lugar) {
     return await locationRepository.getLugarById(id_lugar);
   }
 
@@ -223,19 +223,19 @@ class LocationService {
     const predios = await locationRepository.getPrediosByLugar(uidlugarproduccion);
     let areaTotalLugar = 0;
     predios.forEach(predio => {
-      areaTotalLugar=areaTotalLugar+Number(predio.area || 0);
+      areaTotalLugar = areaTotalLugar + Number(predio.area || 0);
     });
-    
+
     let areaCultivada = 0;
     const lotes = await locationRepository.getLotesPorLugar(uidlugarproduccion);
     lotes.forEach(lote => {
-      areaCultivada=areaCultivada+Number(lote.area || 0);
+      areaCultivada = areaCultivada + Number(lote.area || 0);
     });
 
     const areaDisponible = areaTotalLugar - areaCultivada;
 
     if (area > areaDisponible) {
-      throw new AppError('El area del lote excede el area disponible del lugar de produccion', 400);
+      throw new AppError('El area del lote excede el area disponible del lugar de produccion: ' + areaDisponible, 400);
     }
     return await locationRepository.createLot(data);
   }
@@ -245,52 +245,48 @@ class LocationService {
     return await locationRepository.getLotesPorLugar(id_lugar);
   }
 
-  async editLot(numero_registro, area, id_productor, fecharecoleccion, uidlugarproduccion){
-    const lugar = await locationRepository.getLugarProduccionbyId(uidlugarproduccion)
-    if(lugar.uidproductor !== id_productor){
+  async editLot(numero_registro, lote, id_productor) {
+    const lugar = await locationRepository.getLugarById(lote.uidlugarproduccion)
+    if (lugar.uidproductor !== id_productor) {
       throw new AppError('Solo el productor del lugar de produccion puede editar el lote', 403);
     }
-    
-    const lotes = await locationRepository.getLotesPorLugar(uidlugarproduccion);
+
+    const lotes = await locationRepository.getLotesPorLugar(lote.uidlugarproduccion);
     let areaCultivada = 0;
-    lotes.forEach(lote=>{
-      areaCultivada=areaCultivada+Number(lote.area || 0);
+    lotes.forEach(lot => {
+      areaCultivada = areaCultivada + Number(lot.area || 0);
     })
 
-    const predios = await locationRepository.getPrediosByLugar(uidlugarproduccion);
-    let areaTotalLugar= 0;
-    predios.forEach(predio=>{
-      areaTotalLugar=areaTotalLugar+Number(predio.area || 0);
+    const predios = await locationRepository.getPrediosByLugar(lote.uidlugarproduccion);
+    let areaTotalLugar = 0;
+    predios.forEach(predio => {
+      areaTotalLugar = areaTotalLugar + Number(predio.area || 0);
     })
-    
+
     const loteActual = await locationRepository.getLoteByNumero(numero_registro);
 
     const areaCultivadaRestante = areaCultivada - Number(loteActual.area);
 
-    if ((areaCultivadaRestante+area)>areaTotalLugar){
-      throw new AppError('El area disponible es: '+(areaTotalLugar - areaCultivadaRestante)+ 'por lo tanto el area: '+ area+ ' excede el limite y no se puede editar el lote.', 400);
+    if ((areaCultivadaRestante + lote.area) > areaTotalLugar) {
+      throw new AppError('El area disponible es: ' + (areaTotalLugar - areaCultivadaRestante) + 'por lo tanto el area: ' + lote.area + ' excede el limite y no se puede editar el lote.', 400);
     }
+    
+    if (loteActual.fechasiembra > lote.fecharecoleccion) {
+      throw new AppError('La fecha de siembra: ' + lote.fechasiembra + ' no puede ser mayor a la fecha de recoleccion: ' + fecharecoleccion, 400);
+    }
+    
 
-    try{
-      if(lote.fechasiembra > fecharecoleccion){
-        throw new AppError('La fecha de siembra: '+ lote.fechasiembra + ' no puede ser mayor a la fecha de recoleccion: ' + fecharecoleccion, 400);
-      }
-    }
-    catch(err){
-      throw new AppError(err.message, 400);
-    }
-
-    return await locationRepository.editLot(numero_registro, area, fecharecoleccion);
+    return await locationRepository.editLot(numero_registro, lote);
   }
 
-  async deleteLot(numero_registro, id_productor, id_lugar_produccion){
-    const lugar = await locationRepository.getLugarProduccionbyId(id_lugar_produccion)
-    if(lugar.uidproductor !== id_productor){
+  async deleteLot(numero_registro, id_productor, id_lugar_produccion) {
+    const lugar = await locationRepository.getLugarById(id_lugar_produccion)
+    if (lugar.uidproductor !== id_productor) {
       throw new AppError('Solo el productor del lugar de produccion puede eliminar el lote', 403);
     }
-    try{
+    try {
       return await locationRepository.deleteLot(numero_registro);
-    }catch(err){
+    } catch (err) {
       throw new AppError(err.message, 400);
     }
   }

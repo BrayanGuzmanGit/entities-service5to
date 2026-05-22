@@ -142,13 +142,13 @@ class LocationController {
       next(err);
     }
   }
-  
-  async verificarPredioCentral(req,res, next){
-    try{
+
+  async verificarPredioCentral(req, res, next) {
+    try {
       const { id_lugar } = req.params;
       const updatedLugar = await locationService.verificarPredioCentral(id_lugar, req.user.id);
       return ApiResponse.success(res, updatedLugar, 'Se encontro un predio central');
-    }catch(err){
+    } catch (err) {
       next(err);
     }
   }
@@ -177,9 +177,9 @@ class LocationController {
   async editLot(req, res, next) {
     try {
       const { numero_registro } = req.params;
-      const { area, fecharecoleccion, uidlugarproduccion} = req.body;
+      const lote = req.body
       const id_productor = req.user.id;
-      const updatedLote = await locationService.editLot(numero_registro, area, id_productor, fecharecoleccion, uidlugarproduccion);
+      const updatedLote = await locationService.editLot(numero_registro, lote, id_productor);
       return ApiResponse.success(res, updatedLote, 'Lote editado exitosamente');
     } catch (error) {
       next(error);
@@ -190,7 +190,7 @@ class LocationController {
     try {
       const { numero_registro, uidlugarproduccion } = req.params;
       const id_productor = req.user.id;
-      const deletedLote = await locationService.deleteLot(numero_registro, id_productor, uidlugarproduccion);
+      const deletedLote = await locationService.deleteLot(numeroRegistro, id_productor, uidlugarproduccion);
       return ApiResponse.success(res, deletedLote, 'Lote eliminado exitosamente');
     } catch (err) {
       next(err);

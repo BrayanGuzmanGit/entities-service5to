@@ -27,8 +27,8 @@ router.delete('/lugares/delete/:numeroRegistro', authMiddleware, roleMiddleware(
 // Ruta creacion de lote (solo para productor)
 router.post('/lotes', authMiddleware, roleMiddleware('Productor'), locationController.addLot);
 router.get('/lotes/:id_lugar', authMiddleware, roleMiddleware('Productor'), locationController.getLotesPorLugar);
-router.patch('/lotes/:numeroRegistro', authMiddleware, roleMiddleware('Productor'), locationController.editLot);
-router.delete('/lotes/:numeroRegistro/:uidlugarproduccion', authMiddleware, roleMiddleware('Productor'), locationController.deleteLot); //Añadir validacion de que no haya ninguna solicitud en proceso
+router.patch('/lotes/:numero_registro', authMiddleware, roleMiddleware('Productor'), locationController.editLot);
+router.delete('/lotes/:numero_registro/:uidlugarproduccion', authMiddleware, roleMiddleware('Productor'), locationController.deleteLot); //Añadir validacion de que no haya ninguna solicitud en proceso
 
 // === Rutas de departamentos y municipio (publicas)
 router.get('/departamentos', locationController.getDepartamentos);

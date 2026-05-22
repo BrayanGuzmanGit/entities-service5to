@@ -41,7 +41,7 @@ class LocationRepository {
 
     // 2. Actualizar el predio con la foránea del lugar
     const { data, error } = await supabase
-      .from('predio') 
+      .from('predio')
       .update({ id_lugar_produccion: idLugar })
       .eq('id', idPredio)
       .select()
@@ -165,7 +165,7 @@ class LocationRepository {
     }
 
     // Como no usamos .single(), 'data' es un Array ([]).
-    if(data.length === 0) {
+    if (data.length === 0) {
       return [0]; // No hay predio central, devolvemos un array con un 0 para indicar eso.
     }
 
@@ -185,7 +185,7 @@ class LocationRepository {
     return data;
   }
 
-    async getLugaresByProductor(id_productor) {
+  async getLugaresByProductor(id_productor) {
     const { data, error } = await supabase
       .from('lugar_produccion')
       .select('*')
@@ -209,7 +209,7 @@ class LocationRepository {
           prediosAsociados.forEach(predio => {
             // Sumamos el área (asegurándonos de que sea un número)
             areaTotal += Number(predio.area || 0);
-            
+
             // Si este predio en particular es el central, lo guardamos
             if (predio.es_central) {
               predioCentral = { nombre: predio.nombre };
@@ -231,7 +231,7 @@ class LocationRepository {
   }
 
   async getLugarById(id_lugar) {
-    console.log("Lugar encontrado en repository: "+id_lugar);
+    console.log("Lugar encontrado en repository: " + id_lugar);
     const { data, error } = await supabase
       .from('lugar_produccion')
       .select('*')
@@ -296,7 +296,7 @@ class LocationRepository {
     return data;
   }
 
-  async getLotesById(id_lote){
+  async getLotesById(id_lote) {
     const { data, error } = await supabase
       .from('lote')
       .select('*')
@@ -318,11 +318,18 @@ class LocationRepository {
     return data;
   }
 
-  async editLot(numeroRegistro, area, fecharecoleccion){
+  async editLot(numeroRegistro, lote) {
     const { data, error } = await supabase
       .from('lote')
-      .update({ numero_registro: numeroRegistro, area: area, fecharecoleccion: fecharecoleccion })
+      .update({
+        area: lote.area,
+        cantidadproyectadarecoleccion: lote.cantidadproyectadarecoleccion,
+        cantidad_recoleccion: lote.cantidad_recoleccion,
+        cantidad_plantas: lote.cantidad_plantas,
+        fecharecoleccion: lote.fecharecoleccion
+      })
       .eq('numero_registro', numeroRegistro)
+      .select()
       .single();
 
     if (error) throw new AppError(error.message, 400);
@@ -334,6 +341,7 @@ class LocationRepository {
       .from('lote')
       .delete()
       .eq('numero_registro', numeroRegistro)
+      .select()
       .single();
 
     if (error) throw new AppError(error.message, 400);
