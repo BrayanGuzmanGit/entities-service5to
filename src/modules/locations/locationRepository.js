@@ -230,8 +230,17 @@ class LocationRepository {
     return lugaresEnriquecidos;
   }
 
+  async getLugaresByIds(ids_lugares){
+    const { data, error } = await supabase
+      .from('lugar_produccion')
+      .select('*')
+      .in('id', ids_lugares);
+
+    if (error) throw new AppError(error.message, 500);
+    return data;
+  }
+
   async getLugarById(id_lugar) {
-    console.log("Lugar encontrado en repository: " + id_lugar);
     const { data, error } = await supabase
       .from('lugar_produccion')
       .select('*')

@@ -141,6 +141,14 @@ class UserService {
   async getAllActiveUsers() {
     return await userRepository.getAllActiveUsers();
   }
+
+  async getTecnicosByMunicipio(idMunicipio) {
+    const tecnicos = await userRepository.getTecnicosByMunicipio(idMunicipio);
+    if (tecnicos.length === 0) {
+      throw new AppError('No hay técnicos en este municipio', 404);
+    }
+    return tecnicos;
+  }
 }
 
 module.exports = new UserService();

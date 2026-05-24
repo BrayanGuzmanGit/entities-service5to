@@ -99,6 +99,16 @@ class LocationController {
     }
   }
 
+  async getLugaresByIds(req,res,next){
+    try{
+      const { ids_lugares } = req.body;
+      const lugares = await locationService.getLugaresByIds(ids_lugares);
+      return ApiResponse.success(res, lugares, 'Lugares obtenidos');
+    }catch(err){
+      next(err);
+    }
+  }
+
   async getLugarProduccionbyId(req, res, next) {
     try {
       const { id_lugar } = req.params;
@@ -153,6 +163,16 @@ class LocationController {
     }
   }
 
+  async getMunicipioDelLugar(req, res, next) {
+    try {
+      const { id_lugar } = req.params;
+      const municipio = await locationService.getMunicipioDelLugar(id_lugar);
+      return ApiResponse.success(res, municipio, 'Municipio obtenido');
+    } catch (error) {
+      next(error);
+    }
+  }
+
 
   //===LOTES===
   async addLot(req, res, next) {
@@ -190,7 +210,7 @@ class LocationController {
     try {
       const { numero_registro, uidlugarproduccion } = req.params;
       const id_productor = req.user.id;
-      const deletedLote = await locationService.deleteLot(numeroRegistro, id_productor, uidlugarproduccion);
+      const deletedLote = await locationService.deleteLot(numero_registro, id_productor, uidlugarproduccion);
       return ApiResponse.success(res, deletedLote, 'Lote eliminado exitosamente');
     } catch (err) {
       next(err);

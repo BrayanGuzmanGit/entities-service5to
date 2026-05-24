@@ -85,6 +85,15 @@ class UserController {
       next(error);
     }
   }
+  async getTecnicosByMunicipio(req, res, next) {
+    try {
+      const { idMunicipio } = req.params;
+      const tecnicos = await userService.getTecnicosByMunicipio(idMunicipio);
+      return ApiResponse.success(res, tecnicos, 'Técnicos del municipio recuperados');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 

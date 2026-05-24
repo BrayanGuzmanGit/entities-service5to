@@ -138,7 +138,16 @@ class UserRepository {
     return data;
   }
 
-
+  async getTecnicosByMunicipio(idMunicipio) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nombre, direccion_residencia, telefono, tarjeta_profesional, correo_electronico')
+      .eq('rol', 'Tecnico')
+      .eq('estado', 'Activo')
+      .eq('id_municipio', idMunicipio);
+    
+    if (error) throw new AppError(error.message, 500);
+    return data;
+  }
 }
-
 module.exports = new UserRepository();

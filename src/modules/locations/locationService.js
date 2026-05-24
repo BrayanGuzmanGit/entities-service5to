@@ -148,6 +148,21 @@ class LocationService {
     }
   }
 
+  async getMunicipioDelLugar(id_lugar){
+    const predios = await locationRepository.getPrediosByLugar(id_lugar);
+    let municipio = "";
+    predios.forEach(predio => {
+      if(predio.es_central===true){
+        municipio=predio.id_municipio;
+        return;
+      }
+    });
+    if (municipio===""){
+      throw new AppError("El lugar de produccion no tiene un predio central por lo tanto no hay municipio",400);
+    }
+    return municipio;
+  }
+
   async setPredioCentral(numeroRegistroLugar, numeroRegistroPredio, id_productor) {
     //1. Traer info del lugar de produccion desde la base de datos
     const lugar = await locationRepository.getLugarByNumeroRegistro(numeroRegistroLugar);
@@ -202,6 +217,11 @@ class LocationService {
   async getMyLugares(id_productor) {
     return await locationRepository.getLugaresByProductor(id_productor);
   }
+
+  async getLugaresByIds(ids_lugares){
+    return await locationRepository.getLugaresByIds(ids_lugares);
+  }
+  
   async getLugarProduccionbyId(id_lugar) {
     return await locationRepository.getLugarById(id_lugar);
   }

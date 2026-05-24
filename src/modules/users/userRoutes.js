@@ -15,6 +15,8 @@ router.patch('/:cc/status', authMiddleware, roleMiddleware('Funcionario'), userC
 router.get('/me', authMiddleware, userController.getProfile);
 router.get('/all', authMiddleware, roleMiddleware('Funcionario'), userController.getAllActiveUsers);
 
+router.get('/tecnicos/:idMunicipio', authMiddleware, roleMiddleware('Funcionario'), userController.getTecnicosByMunicipio); //tecnicos por municipio
+
 // === Rutas Protegidas (Usuarios activos) ===
 router.patch('/editProfile', authMiddleware, userController.editProfile);
 

@@ -15,7 +15,10 @@ router.delete('/predio/delete/:numeroRegistro', authMiddleware, roleMiddleware('
 
 // === Rutas de Lugares de Producción ===
 router.post('/lugares', authMiddleware, roleMiddleware('Productor'), locationController.createLugarProduccion);
-router.get('/lugar/:id_lugar', authMiddleware, roleMiddleware('Productor'), locationController.getLugarProduccionbyId);
+
+router.post('/lugares/inspecciones', authMiddleware, roleMiddleware('Funcionario'), locationController.getLugaresByIds);//un get que de un array de ids de lugares traiga los datos de los lugares
+
+router.get('/lugar/:id_lugar', authMiddleware, roleMiddleware('Productor', 'Funcionario', 'Tecnico'), locationController.getLugarProduccionbyId);
 router.patch('/lugares/predioCentral', authMiddleware, roleMiddleware('Productor'), locationController.setPredioCentral);
 router.get('/lugares/verificarCentral/:id_lugar', authMiddleware, roleMiddleware('Productor'), locationController.verificarPredioCentral);
 router.get('/lugares/:id_productor', authMiddleware, roleMiddleware('Productor'), locationController.getMyLugares);
@@ -23,6 +26,7 @@ router.patch('/lugares/:numeroRegistro', authMiddleware, roleMiddleware('Product
 router.get('/lugares/:id_lugar/predios', authMiddleware, roleMiddleware('Productor'), locationController.getPrediosByLugar);
 router.delete('/lugares/delete/:numeroRegistro', authMiddleware, roleMiddleware('Productor'), locationController.deleteLugar);
 
+router.get('/lugarMunicipio/:id_lugar', authMiddleware, roleMiddleware('Funcionario'), locationController.getMunicipioDelLugar); //id del municipio dependiendo el lugar
 
 // Ruta creacion de lote (solo para productor)
 router.post('/lotes', authMiddleware, roleMiddleware('Productor'), locationController.addLot);
