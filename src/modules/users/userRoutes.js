@@ -14,8 +14,8 @@ router.get('/pending', authMiddleware, roleMiddleware('Funcionario'), userContro
 router.patch('/:cc/status', authMiddleware, roleMiddleware('Funcionario'), userController.changeUserStatus);
 router.get('/me', authMiddleware, userController.getProfile);
 router.get('/all', authMiddleware, roleMiddleware('Funcionario'), userController.getAllActiveUsers);
-
 router.get('/tecnicos/:idMunicipio', authMiddleware, roleMiddleware('Funcionario'), userController.getTecnicosByMunicipio); //tecnicos por municipio
+router.get('/:id', authMiddleware, userController.getUserById);
 
 // === Rutas Protegidas (Usuarios activos) ===
 router.patch('/editProfile', authMiddleware, userController.editProfile);

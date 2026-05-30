@@ -38,6 +38,16 @@ class UserController {
     }
   }
 
+  async getUserById(req, res, next) {
+    try {
+      const { id } = req.params;
+      const user = await userService.getUserById(id);
+      return ApiResponse.success(res, user, 'Usuario recuperado');
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async listPending(req, res, next) {
     try {
       const users = await userService.getPendingUsers();
@@ -95,8 +105,6 @@ class UserController {
     }
   }
 }
-
-
 
 
 module.exports = new UserController();

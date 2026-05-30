@@ -88,6 +88,13 @@ class UserService {
     return user;
   }
 
+  async getUserById(id) {
+    const user = await userRepository.findUserById(id);
+    if (!user) {
+      throw new AppError('Usuario no encontrado', 404);
+    }
+    return user;
+  }
 
   async getPendingUsers() {
     return await userRepository.getPendingUsers();

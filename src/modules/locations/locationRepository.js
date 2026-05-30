@@ -192,7 +192,6 @@ class LocationRepository {
       .eq('uidproductor', id_productor);
 
     if (error) throw new AppError(error.message, 500);
-
     const lugaresEnriquecidos = await Promise.all(
       data.map(async (lugar) => {
         // 1. Traemos TODOS los predios de este lugar (pedimos nombre, área y si es central)
@@ -204,25 +203,39 @@ class LocationRepository {
         let areaTotal = 0;
         let predioCentral = null;
 
-        // 2. Si encontró predios, los recorremos para sumar el área y encontrar el central
         if (prediosAsociados && prediosAsociados.length > 0) {
           prediosAsociados.forEach(predio => {
-            // Sumamos el área (asegurándonos de que sea un número)
             areaTotal += Number(predio.area || 0);
-
-            // Si este predio en particular es el central, lo guardamos
             if (predio.es_central) {
               predioCentral = { nombre: predio.nombre };
             }
           });
         }
 
-        // 3. Devolvemos la caja original + el central + la nueva Área Total
+        // 2. Traemos los lotes asociados al lugar para calcular el área cultivada
+        let areaCultivada = 0;
+        try {
+          const { data: lotes } = await supabase
+            .from('lote')
+            .select('area')
+            .eq('uidlugarproduccion', lugar.id);
+
+          if (Array.isArray(lotes) && lotes.length > 0) {
+            lotes.forEach(lote => {
+              areaCultivada += Number(lote.area || 0);
+            });
+          }
+        } catch (e) {
+          // No queremos que un fallo al traer lotes rompa toda la respuesta
+          areaCultivada = 0;
+        }
+
+        // 3. Devolvemos la caja original + el central + la nueva Área Total y Área Cultivada
         return {
           ...lugar,
           predioCentral: predioCentral || null,
-          areaTotal: areaTotal
-          //Modificar para que tambien traiga el area cultivada que es la suma del area de todos los lotes
+          areaTotal: areaTotal,
+          areaCultivada: areaCultivada
         };
       })
     );
