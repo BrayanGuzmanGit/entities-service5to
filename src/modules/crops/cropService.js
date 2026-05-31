@@ -18,8 +18,8 @@ class CropService {
     return await cropRepository.getCultivos();
   }
 
-  async getPlagasPorCultivo(idCultivo) {
-    return await cropRepository.getPlagasPorCultivo(idCultivo);
+  async getPlagasPorCultivo(numeroRegistro) {
+    return await cropRepository.getPlagasPorCultivo(numeroRegistro);
   }
 }
 module.exports = new CropService();

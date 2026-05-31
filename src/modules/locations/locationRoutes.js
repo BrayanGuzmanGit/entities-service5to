@@ -30,7 +30,7 @@ router.get('/lugarMunicipio/:id_lugar', authMiddleware, roleMiddleware('Funciona
 
 // Ruta creacion de lote (solo para productor)
 router.post('/lotes', authMiddleware, roleMiddleware('Productor'), locationController.addLot);
-router.get('/lotes/:id_lugar', authMiddleware, roleMiddleware('Productor'), locationController.getLotesPorLugar);
+router.get('/lotes/:id_lugar', authMiddleware, roleMiddleware('Productor','Tecnico'), locationController.getLotesPorLugar);
 router.patch('/lotes/:numero_registro', authMiddleware, roleMiddleware('Productor'), locationController.editLot);
 router.delete('/lotes/:numero_registro/:uidlugarproduccion', authMiddleware, roleMiddleware('Productor'), locationController.deleteLot); //Añadir validacion de que no haya ninguna solicitud en proceso
 
