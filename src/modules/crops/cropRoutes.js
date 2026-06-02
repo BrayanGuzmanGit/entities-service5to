@@ -3,7 +3,7 @@ const router = express.Router();
 const cropController = require('./cropController');
 const { authMiddleware, roleMiddleware } = require('../../middlewares/authMiddleware');
 
-const allowedRoles = ['Productor', 'Funcionario', 'Asistente Tecnico'];
+const allowedRoles = ['Productor', 'Funcionario', 'Tecnico'];
 
 //Ahorita no se usan esta tres
 router.post('/cultivos', authMiddleware, roleMiddleware(...allowedRoles), cropController.addCrop);

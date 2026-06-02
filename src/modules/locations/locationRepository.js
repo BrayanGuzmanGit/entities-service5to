@@ -311,7 +311,7 @@ class LocationRepository {
   async getLotesPorLugar(id_lugar) {
     const { data, error } = await supabase
       .from('lote')
-      .select('*, cultivo:uidcultivo(nombre_comun)')//Traer tambien el nombre del cultivo
+      .select('*, cultivo:uidcultivo(*)')//Traer tambien el nombre del cultivo
       .eq('uidlugarproduccion', id_lugar);
 
     if (error) throw new AppError(error.message, 500);
