@@ -35,8 +35,8 @@ class CropController {
 
   async getPlagasPorCultivo(req, res, next) {
     try {
-      const { numero_registro } = req.params;
-      const result = await cropService.getPlagasPorCultivo(numero_registro);
+      const { uidcultivo } = req.params;
+      const result = await cropService.getPlagasPorCultivo(uidcultivo);
       return ApiResponse.success(res, result, 'Plagas obtenidas exitosamente', 200);
     } catch (err) {
       next(err);

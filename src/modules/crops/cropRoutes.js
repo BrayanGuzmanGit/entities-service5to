@@ -16,6 +16,6 @@ router.get('/cultivos', authMiddleware, roleMiddleware(...allowedRoles), cropCon
 
 
 //ver las plagas registradas en la base de datos por cultivo
-router.get('/cultivo-plaga/:numero_registro', authMiddleware, roleMiddleware(...allowedRoles),cropController.getPlagasPorCultivo);
+router.get('/cultivo-plaga/:uidcultivo', authMiddleware, roleMiddleware(...allowedRoles),cropController.getPlagasPorCultivo);
 
 module.exports = router;
