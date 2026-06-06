@@ -173,6 +173,16 @@ class LocationController {
     }
   }
 
+  async getDireccionLugar(req,res,next){
+    try{
+      const { id_lugar } = req.params;
+      const direccion = await locationService.getDireccionLugar(id_lugar);
+      return ApiResponse.success(res, direccion, 'Direccion obtenida');
+    } catch (error) {
+      next(error);
+    }
+  }
+
 
   //===LOTES===
   async addLot(req, res, next) {

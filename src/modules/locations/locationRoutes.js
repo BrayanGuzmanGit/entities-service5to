@@ -27,6 +27,8 @@ router.get('/lugares/:id_lugar/predios', authMiddleware, roleMiddleware('Product
 router.delete('/lugares/delete/:numeroRegistro', authMiddleware, roleMiddleware('Productor'), locationController.deleteLugar);
 
 router.get('/lugarMunicipio/:id_lugar', authMiddleware, roleMiddleware('Funcionario'), locationController.getMunicipioDelLugar); //id del municipio dependiendo el lugar
+//añadir ruta /direccionLugar/:id_lugar
+router.get('/direccionLugar/:id_lugar', authMiddleware, roleMiddleware('Funcionario', 'Tecnico'), locationController.getDireccionLugar); //direccion del lugar dependiendo del id del lugar
 
 // Ruta creacion de lote (solo para productor)
 router.post('/lotes', authMiddleware, roleMiddleware('Productor'), locationController.addLot);

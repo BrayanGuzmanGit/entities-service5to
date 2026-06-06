@@ -163,6 +163,23 @@ class LocationService {
     return municipio;
   }
 
+  async getDireccionLugar(id_lugar) {
+    const predios = await locationRepository.getPrediosByLugar(id_lugar);
+    
+    // Buscamos el predio central para saber la direccion del lugar 
+    const predioCentral = predios.find(predio => predio.es_central === true);
+    
+    if (!predioCentral) {
+      throw new AppError("El lugar de produccion no tiene un predio central por lo tanto no hay direccion", 400);
+    }
+    return {
+        direccion: predioCentral.direccion,
+        municipio: predioCentral.municipio.nombre
+    }; 
+
+}
+
+
   async setPredioCentral(numeroRegistroLugar, numeroRegistroPredio, id_productor) {
     //1. Traer info del lugar de produccion desde la base de datos
     const lugar = await locationRepository.getLugarByNumeroRegistro(numeroRegistroLugar);
