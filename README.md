@@ -1,129 +1,230 @@
-  # Sistema Integrador de Inspecciones - ICA (Backend)
-  *(Arquitectura de Microservicios, MVC Extendido y API REST)*
+# 🤝Servicio de entidades
+Backend desarrollado con Node.js y Express.js para la gestión de entidades utilizadas en un sistema web de inspecciones fitosanitarias.
 
-  ¡Bienvenido! Este `README.md` es una **guía técnica y educativa profunda**. Está diseñada para un estudiante de Ingeniería de Sistemas interesando en las bases teóricas y la ejecución práctica de un software empresarial, web y orientado a servicios.
+Este servicio forma parte de una arquitectura orientada a servicios y se encarga de gestionar información como usuarios, productores, predios, lugares de producción, lotes, cultivos, plagas y otras entidades relacionadas con el sistema, mientras que inspections-service se encarga de la lógica específica de las inspecciones.
 
-  Este proyecto se aleja de la clásica estructura de "todo en un mismo archivo" y aplica conceptos modernos de escalabilidad, seguridad e **Inversión de Control (IoC)** (en espíritu, mediante la modularización). 
+## Problema que resuelve
 
-  A continuación, la anatomía completa del sistema.
+El proceso de inspección fitosanitaria y técnica para la exportación de productos hortofrutícolas requiere recopilar y gestionar información sobre productores, propietarios, predios, lugares de producción, lotes, cultivos, plagas e inspecciones.
 
-  ---
+Actualmente, parte de este proceso puede involucrar el uso de formularios físicos y la posterior digitalización de la información, lo que puede generar demoras, información incompleta y mayor dificultad para realizar el seguimiento de las inspecciones.
 
-  ## 1. Topología: Microservicios vs Monolito
+Este proyecto propone una solución web que centraliza la información y digitaliza parte del proceso de gestión de inspecciones, facilitando el trabajo de los funcionarios y asistentes técnicos.
 
-  El proyecto consta de dos carpetas (`entities-service` e `inspections-service`). Técnicamente, son **dos servidores web independientes de Node.js**.
+## Alcance del proyecto
 
-  ### Fundamento Técnico
-  - **El Monolito:** En un sistema monolítico, todos los dominios (Usuarios, Cultivos, Inspecciones) comparten la misma memoria RAM, el mismo hilo de ejecución y la misma base de datos.
-    - *Problema:* El hilo principal de Node.js es de un solo subproceso (*single-threaded*). Si un algoritmo pesado en "Inspecciones" bloquea el *Event Loop*, los usuarios no podrán hacer "Login" en la sección de Entidades.
-  - **La solución (Microservicios):** Al separarlos, aplicamos el patrón **Strangler/Separation of Concerns**. `entities-service` gestiona los catálogos y actores del sistema usando el puerto `:3001` y su propia base de datos, mientras que `inspections-service` opera de forma completamente autónoma en el puerto `:3002`.
-    - *Ventaja técnica:* Puedes subir ambos servicios a contenedores Docker. Si el día de mañana se hacen 10,000 inspecciones por minuto, configuras Kubernetes para tener 5 instancias de `inspections-service` y solo 1 de `entities-service`, optimizando costos de CPU y RAM de forma asimétrica.
+El sistema abarca la gestión de:
 
-  ---
+- Usuarios y roles.
+- Productores y propietarios.
+- Predios y lugares de producción.
+- Lotes y cultivos.
+- Plagas y relaciones entre cultivos y plagas.
+- Información necesaria para el seguimiento de los procesos de inspección.
 
-  ## 2. La Capa de Transporte: Express.js y el Event Loop
+El sistema contempla diferentes niveles de acceso según el rol del usuario, permitiendo que cada tipo de usuario consulte o gestione la información correspondiente a sus responsabilidades.
 
-  Cada servidor está construido sobre `Express.js`. Todo fluye a través del ciclo de vida del protocolo HTTP: *Request* (`req`) y *Response* (`res`).
+## Cómo aborda el problema
 
-  Todas las funciones del sistema usan la palabra clave **`async / await`**. 
-  - **¿Por qué?** Node.js usa operaciones I/O no bloqueantes (Non-blocking I/O). Cuando el servidor le pregunta algo a Supabase (una petición por red que tarda ms), la CPU de tu servidor no se queda inactiva. Devuelve el control al *Event Loop* para atender a otro usuario, y cuando Supabase responde, la función retoma su ejecución.
+La solución busca reemplazar parte del manejo manual de información mediante una plataforma web que:
 
-  ---
+- Centraliza la información relacionada con los lugares de producción.
+- Permite registrar y actualizar información desde el sistema.
+- Facilita la consulta de cultivos, plagas, lotes y demás entidades relacionadas.
+- Permite gestionar información asociada a las inspecciones.
+- Implementa autenticación y autorización basada en roles.
+- Facilita la comunicación entre los servicios encargados de gestionar las entidades y procesar las inspecciones.
 
-  ## 3. Arquitectura Limpia: El Patrón Controller - Service - Repository
+De esta manera, el proyecto busca reducir la dependencia de formularios físicos y facilitar la disponibilidad, organización y consulta de la información durante el proceso de inspección.
 
-  Dentro de `src/modules/...` usamos una adaptación del patrón de diseño por capas. Evitamos el acoplamiento fuerte.
+## Características
 
-  ### 3.1. Rutas (`Route`) e Interceptores (`Middleware`)
-  La ruta es el punto de entrada, ej. `POST /api/users/login`. 
-  Antes de llegar al controlador, pasa por una "aduana": **Los Middlewares**.
-  - **Explicación Técnica:** Un Middleware (`req, res, next`) examina la petición. En nuestro código, el `authMiddleware` busca el encabezado HTTP `Authorization: Bearer <token>`. Si es inválido, rechaza la HTTP Request con un código `401 Unauthorized` bloqueando el paso e impidiendo que tu lógica principal gaste CPU. Si es válido, llama a `next()` para ceder el control.
+- API REST para la gestión de entidades.
+- Operaciones CRUD.
+- Autenticación de usuarios.
+- Autorización basada en roles.
+- Validación de solicitudes.
+- Manejo centralizado de errores.
+- Persistencia de datos mediante PostgreSQL/Supabase.
+- Comunicación con otros servicios mediante APIs REST.
 
-  ### 3.2. La Capa HTTP (`Controller`)
-  El archivo `Controller.js` es el encargado **únicamente** de la comunicación HTTP. 
-  No debería saber cómo calcular un descuento ni cómo se llama la base de datos. Solo sabe leer un JSON y devolver un JSON.
-  ```javascript
-  // Ejemplo conceptual en nuestro userController
-  async login(req, res, next) {
-    try {
-      const { email, password } = req.body; // Pura manipulación de entrada web
-      const result = await userService.login(email, password); // Delega la responsabilidad
-      return ApiResponse.success(res, result, 'Login exitoso'); // Formatea la salida web estándar
-    } catch (error) {
-      next(error); // Delega el choque a una central de errores
-    }
-  }
-  ```
+## 🛠️ Tecnologías
 
-  ### 3.3. La Capa de Dominio (`Service`)
-  La "Lógica de Negocio". Si necesitamos implementar una regla estricta: *"Un registro de Cultivo debe pesar menos de 2 toneladas y el creador debe tener el rol Productor"*, esa validación imperativa va en el `userService` o `cropService`.
-  Si usáramos la arquitectura "hamburguesa" y todo estuviera en el Controller, sería imposible re-usar la lógica de registrar usuarios si quisiéramos implementarlo vía comandos de consola (CLI) en un futuro, pues un CLI no tiene `req` ni `res`.
+- Node.js
+- Express.js
+- JavaScript
+- PostgreSQL
+- Supabase
+- APIs REST
+- dotenv
+- CORS
 
-  ### 3.4. La Capa de Datos (`Repository`)
-  El patrón Repositorio es un escudo. Su función es "encapsular la tecnología de persistencia". 
-  Actualmente, el `userRepository.js` contiene algo así: `supabase.auth.signUp()`.
-  - **Ventaja técnica gigantesca:** Si en 3 años, Supabase se vuelve obsoleto y deciden migrar a una base de datos propia en Oracle o Firebase, **sólamente editas los archivos Repository**. El Controlador y el Servicio ni siquiera notarán el cambio de tecnología del motor de la base de datos. Esto es el Santo Grial de un software mantenible.
+## 🏗️ Arquitectura
 
-  ---
+#### Routes
+Definen los endpoints disponibles y dirigen las solicitudes hacia los controladores correspondientes.
 
-  ## 4. Respuestas unificadas y Manejo de Errores
+#### Middlewares
+Se encargan de tareas transversales como autenticación, autorización y validaciones antes de ejecutar la lógica principal.
 
-  En proyectos amateures, cada programador responde cómo se le da la gana (`res.send()`, `res.json({error: "ups" })`).
-  Nosotros utilizamos la clase `ApiResponse`. Esto es un **DTO (Data Transfer Object)** implícito. 
-  Garantiza que el Frontend de ICA siempre va a recibir el mismo contrato JSON, indistintamente si la petición fue un éxito o un error:
-  ```json
-  {
-    "success": true, // o false
-    "message": "Operación exitosa",
-    "data": { ... } // objeto nulo si es un error
-  }
-  ```
-  Además, en cualquier parte del código que un programa falle, simplemente se hace `throw error` (el bloque catch invoca a `next(error)`). En el archivo central `server.js` hay un Middleware atrapa-errores que procesa ese desplome y evita que Node.js colapse con el famoso `UnhandledPromiseRejection`, regresando educadamente un error 500 al cliente web.
+#### Controllers
+Gestionan las solicitudes HTTP, separan los datos que vienen en la solicitud y construyen las respuestas que recibe el cliente.
 
-  ---
+#### Services
+Contienen la lógica de negocio de las diferentes funcionalidades del sistema.
 
-  ## 5. Decisiones Criptográficas y de Seguridad (Supabase Auth)
+#### Repositories
+Encapsulan el acceso a los datos y la interacción con Supabase.
 
-  **Por qué no guardamos las contraseñas en una tabla de tu código:**
-  Guardar contraseñas es un riesgo masivo (incluso hasheadas con bcrypt/salt). Aprovechamos **Supabase como un BaaS (Backend as a Service)**.
-  - **Autenticación "Stateless":** El sistema NO GUARDA sesiones en RAM. Usa **JWT (JSON Web Tokens)**.
-    - El token que nos da Supabase se divide en 3 partes cifradas criptográficamente (Base64Url): El *Header* (algoritmo HS256), el *Payload* (id_user, email, caducidad) y la *Signature* (Firma digital intocable fabricada por el servidor secreto). 
-    - Al no haber estado/sesión guardada en nuestra RAM, el servidor es 100% "stateless", lo cual es **obligatorio en arquitecturas REST**.
+## 🔐 Autenticación y autorización
 
-  ---
+La autenticación se implementa mediante Supabase Auth.
+El acceso a los recursos protegidos se controla mediante middleware, validando el token de autenticación y los permisos asociados al usuario.
+El sistema utiliza autorización basada en roles para restringir determinadas operaciones según el tipo de usuario.
 
-  ## 6. Variables de Entorno (`.env`)
+### 👥 Roles
 
-  ```env
-  SUPABASE_URL=https://tuid.supabase.co
-  SUPABASE_ANON_KEY=eyJhbG... // <- Nunca expuesto
-  ```
-  En ingeniería de sistemas existe el concepto del Manifiesto de las 12 Aplicaciones (Twelve-Factor App). Una regla vital estipula que **la configuración que varía entre escenarios de despliegue se guarda en el entorno, NO en el código fuente**.
-  Para pasar del entorno de "Pruebas" a "Producción Comercial", no editamos `config.js`, simplemente cambiamos el contenido del `.env`. También protege el código de crawlers maliciosas en GitHub.
+El sistema utiliza autorización basada en roles para controlar el acceso a los recursos.
 
-  ---
+Los principales roles utilizados son:
 
-  ## 7. Retos y Vulnerabilidades para el Ingeniero a Futuro
+- **Propietario:** Gestión de predios.
+- **Productor:** Gestión de lugares de producción y lotes.
+- **Funcionario:** Administración y consulta de información del sistema.
+- **Técnico:** Acceso a información necesaria para los procesos de inspección.
 
-  Para pasar de un código excelente a un nivel Enterprise / Bancario, el proyecto demanda lo siguiente:
+## 🔗 Integración con otros servicios
 
-  1. **Problemas del Modelo Distribuido (Integridad Referencial):** 
-    - Como Inspecciones está en el Servidor 2, y Predios en el Servidor 1... ¿Cómo aseguramos desde la base de datos 2 que el Predio existe? En una DB Monolítica usas un `FOREIGN KEY`. En microservicios requieres llamadas RPC o Sagas de Mensajería (Kafka/RabbitMQ) para sincronizar bases de datos distribuidas (Patrón *Event-driven Architecture*).
-  2. **Ataques de Tipo DoS y Fuerza Bruta:** 
-    - Añadir una biblioteca como `helmet` para inyectar cabeceras HTTP de seguridad militar (Anti Click-jacking).
-    - Añadir `express-rate-limit` para bloquear IPs que hagan `.login()` más de 5 veces en 1 minuto.
-  3. **Serialización y Validación de Schemas (OWASP):** 
-    - Un usuario agresivo podría enviar al JSON del API un código SQL dañino, o texto de 100 Megabytes haciéndote gastar RAM (Un ataque de Desbordamiento). Debes agregar un validador léxico (como `Zod` o `Joi`) dentro de las rutas, exigiendo que cada `req.body.password` obligatoriamente sea de tipo `string` y no mayor a 30 caracteres, descartando el paquete de red antes de que lo use Controller.
+Este servicio forma parte de un sistema compuesto por dos servicios backend.
 
-  ---
+El **Inspections Service** consume información gestionada por este servicio mediante APIs REST. Por ejemplo, puede solicitar información relacionada con plagas, cultivos u otras entidades necesarias para procesar las inspecciones.
 
-  ## Instrucciones Operativas Rápidas
+La comunicación entre servicios permite mantener separadas las responsabilidades de gestión de entidades y procesamiento de inspecciones.
 
-  ```bash
-  # Terminal 1 - Microservicio 1 (Entidades y Catálogo)
-  cd entities-service && npm install && node src/index.js 
+**Servicio relacionado:**
 
-  # Terminal 2 - Microservicio 2 (Core Operativo de Inspecciones)
-  cd inspections-service && npm install && node src/index.js 
-  ```
-  Ambos se apoyan conceptualmente. La interfaz web (`test-ui.html` en la raíz) actúa como el cliente consumiendo ambos endpoints como un orquestador.
+- [Inspections Service](https://github.com/BrayanGuzmanGit/inspections-service)
+
+
+## 📋 Entidades gestionadas
+Entre las principales entidades gestionadas por este servicio se encuentran:
+- Predios
+- Lugares de producción
+- Lotes
+- Cultivos
+- Plagas
+- Cultivo-Plaga
+- Departamentos
+- Municipios
+
+## 🔌 Endpoints principales
+
+El servicio expone diferentes endpoints REST organizados según las entidades y funcionalidades del sistema.
+
+### 👤 Usuarios y autenticación
+
+| Método | Endpoint | Acceso | Descripción |
+|---|---|---|---|
+| POST | `/register` | Público | Registra un nuevo usuario. |
+| POST | `/login` | Público | Autentica un usuario. |
+| GET | `/me` | Autenticado | Obtiene el perfil del usuario autenticado. |
+| GET | `/:id` | Autenticado | Obtiene un usuario por su identificador. |
+| GET | `/all` | Funcionario | Obtiene los usuarios activos. |
+| GET | `/pending` | Funcionario | Consulta usuarios pendientes. |
+| GET | `/tecnicos/:idMunicipio` | Funcionario | Obtiene los técnicos asociados a un municipio. |
+| PATCH | `/:cc/status` | Funcionario | Cambia el estado de un usuario. |
+
+### 🌱 Predios
+
+| Método | Endpoint | Rol | Descripción |
+|---|---|---|---|
+| POST | `/predios` | Propietario | Crea un predio. |
+| GET | `/predios/:id_propietario` | Propietario | Consulta los predios de un propietario. |
+| PATCH | `/predios/link` | Propietario | Vincula un lugar de producción a un predio. |
+| PATCH | `/predios/:numeroRegistro` | Propietario | Actualiza un predio. |
+| PATCH | `/predio/unlink` | Propietario | Desvincula un lugar de producción de un predio. |
+| DELETE | `/predio/delete/:numeroRegistro` | Propietario | Elimina un predio. |
+
+### 🌾 Lugares de producción
+
+| Método | Endpoint | Rol | Descripción |
+|---|---|---|---|
+| POST | `/lugares` | Productor | Crea un lugar de producción. |
+| PATCH | `/lugares/predioCentral` | Productor | Establece el predio central de un lugar. |
+| GET | `/lugares/verificarCentral/:id_lugar` | Productor | Verifica si un lugar corresponde al predio central. |
+| GET | `/lugares/:id_productor` | Productor | Consulta los lugares asociados a un productor. |
+| POST |  `/lugares/inspecciones` | Funcionario | Obtiene información de los lugares a partir de sus identificadores. |
+| PATCH | `/lugares/:numeroRegistro` | Productor | Actualiza el nombre de un lugar. |
+| GET | `/lugares/:id_lugar/predios` | Productor | Consulta los predios asociados a un lugar. |
+| DELETE | `/lugares/delete/:numeroRegistro` | Productor | Elimina un lugar de producción. |
+| GET | `/lugarMunicipio/:id_lugar` | Funcionario | Consulta el municipio asociado a un lugar. |
+
+### 📦 Lotes
+
+| Método | Endpoint | Rol | Descripción |
+|---|---|---|---|
+| POST | `/lotes` | Productor | Crea un lote. |
+| GET | `/lotes/:id_lugar` | Productor / Técnico | Consulta los lotes de un lugar. |
+| PATCH | `/lotes/:numero_registro` | Productor | Actualiza un lote. |
+| DELETE | `/lotes/:numero_registro/:uidlugarproduccion` | Productor | Elimina un lote. |
+
+### 🌱 Cultivos y plagas
+
+| Método | Endpoint | Rol | Descripción |
+|---|---|---|---|
+| GET | `/cultivos` | Productor / Funcionario / Técnico | Consulta los cultivos registrados. |
+| GET | `/cultivo-plaga/:uidcultivo` | Productor / Funcionario / Técnico | Consulta las plagas asociadas a un cultivo. |
+
+
+### 📍 Ubicaciones
+
+| Método | Endpoint | Acceso | Descripción |
+|---|---|---|---|
+| GET | `/departamentos` | Público | Consulta los departamentos registrados. |
+| GET | `/municipios` | Público | Consulta los municipios registrados. |
+
+## ⚙️ Requisitos
+Para ejecutar el proyecto necesitas:
+- Node.js
+- pnpm
+- Una instancia de Supabase configurada
+- Variables de entorno necesarias para la conexión
+
+## 📦 Instalación
+
+Clona el repositorio: 
+ ```
+git clone https://github.com/BrayanGuzmanGit/entities-service5to.git 
+ ```
+Accede al proyecto:
+```
+cd entities-service5to
+```
+Instala las dependencias:
+```
+pnpm install
+```
+
+## 🔑 Variables de entorno
+Crea un archivo .env en la raíz del proyecto con las variables necesarias para la conexión con Supabase. Ejemplo:
+ ```
+SUPABASE_URL=tu_url_de_supabase
+SUPABASE_ANON_KEY=tu_clave_de_supabase
+ ```
+## ▶️ Ejecución
+Ejecuta el servidor utilizando el archivo de entrada configurado en el proyecto:
+ ```
+ node src/index.js
+```
+
+## 🔮 Mejoras futuras
+- Fortalecimiento de validaciones y políticas de seguridad.
+- Contenerización mediante Docker.
+- Automatización de procesos de integración y despliegue.
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+</p>
